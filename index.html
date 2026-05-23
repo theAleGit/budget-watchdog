@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burn-Rate Radar | Financial Security</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Burn-Rate Radar</h1>
+            <p>Controllo totale della tua esposizione finanziaria</p>
+        </header>
+
+        <section id="input-section">
+            <input type="text" id="itemName" placeholder="Nome Spesa (es. Server, Netflix)">
+            <input type="number" id="itemCost" placeholder="Costo (€)">
+            <select id="frequency">
+                <option value="12">Mensile</option>
+                <option value="1">Annuale</option>
+            </select>
+            <button id="addBtn">Aggiungi</button>
+        </section>
+
+        <section id="display-section">
+            <div id="total-display">Totale Annuo: €0</div>
+            <ul id="list"></ul>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
