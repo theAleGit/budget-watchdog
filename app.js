@@ -1,5 +1,11 @@
-// 1. Inizializzazione: recuperiamo i dati o creiamo un array vuoto
-let expenses = JSON.parse(localStorage.getItem('myExpenses')) || [];
+// 1. Inizializzazione protetta da eccezioni (Try-Catch Hardening)
+let expenses = [];
+try {
+    expenses = JSON.parse(localStorage.getItem('myExpenses')) || [];
+} catch (e) {
+    console.error("Rilevata corruzione nei dati locali. Inizializzazione di ripiego eseguita.", e);
+    expenses = [];
+}
 
 const itemNameInput = document.getElementById('itemName');
 const itemCostInput = document.getElementById('itemCost');
@@ -9,108 +15,106 @@ const listDisplay = document.getElementById('list');
 const totalDisplay = document.getElementById('total-display');
 const budgetInput = document.getElementById('budgetLimit');
 
-// 2. Funzione di Hardening: Sanitizzazione dell'input
+// 2. Sanitizzazione preventiva delle stringhe di input
 function sanitizeInput(str) {
     const temp = document.createElement('div');
-    temp.textContent = str; // Converte i caratteri pericolosi in testo puro
+    temp.textContent = str;
     return temp.innerHTML;
 }
 
-// 3. Logica di aggiornamento UI
+// 3. Logica di rendering dell'interfaccia protetta
 function updateUI() {
-    listDisplay.innerHTML = '';
+    listDisplay.innerHTML = ''; // Reset sicuro del contenitore lista
     let total = 0;
 
-    // Ciclo su ogni spesa per calcolare il totale e generare la lista
+    // Controllo di validità sul limite del budget (Evita valori negativi o zero)
+    let limit = parseFloat(budgetInput.value);
+    if (isNaN(limit) || limit <= 0) {
+        limit = 1000; 
+    }
+
+    // Generazione dinamica della lista con metodi nativi blindati (No XSS injection)
     expenses.forEach((item, index) => {
-        // Calcolo: il moltiplicatore (12 o 1) è già nel value della select
-        const annualCost = item.cost * item.freq;
+        // Hardening di integrità: Assicurati che i dati estratti dal DB siano effettivamente numeri stabili
+        const safeCost = parseFloat(item.cost) || 0; 
+        const safeFreq = parseInt(item.freq) || 12;
+
+        const annualCost = safeCost * safeFreq;
         total += annualCost;
 
         const li = document.createElement('li');
-        li.innerHTML = `
-            <span>${item.name} (${item.freq === 12 ? 'Mensile' : 'Annuale'})</span>
-            <span>€${item.cost}</span>
-        `;
 
-        // Creazione bottone per eliminare la voce specifica
+        // Costruzione sicura dei nodi di testo tramite textContent usando i dati validati
+        const detailsSpan = document.createElement('span');
+        detailsSpan.textContent = `${item.name} (${safeFreq === 12 ? 'Mensile' : 'Annuale'})`;
+
+        const costSpan = document.createElement('span');
+        costSpan.textContent = `€${safeCost.toFixed(2)}`;
+
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = 'X';
         deleteBtn.onclick = () => {
-            expenses.splice(index, 1); // Rimuove l'elemento dall'array
-            localStorage.setItem('myExpenses', JSON.stringify(expenses)); // Aggiorna il salvataggio
-            updateUI(); // Ridisegna la lista
+            expenses.splice(index, 1);
+            localStorage.setItem('myExpenses', JSON.stringify(expenses));
+            updateUI();
         };
-        
+
+        // Aggancio sicuro dei nodi al genitore
+        li.appendChild(detailsSpan);
+        li.appendChild(costSpan);
         li.appendChild(deleteBtn);
         listDisplay.appendChild(li);
     });
 
-    // Aggiornamento del display totale
     totalDisplay.textContent = `Totale Annuo: €${total.toFixed(2)}`;
 
-    // --- LOGICA BUDGET E BARRA DI PROGRESSO ---
-    // Recuperiamo il budget dall'input (default 10.000€ se l'input è vuoto)
-    const limit = parseFloat(budgetInput.value) || 10000;
-    // Calcolo percentuale (con limite massimo al 100% per non rompere il layout)
+    // Calcolo della percentuale della barra vincolato tra 0% e 100%
     const percentage = Math.min((total / limit) * 100, 100);
     
     const progressBar = document.getElementById('progress-bar');
     const progressText = document.getElementById('progress-text');
 
-    // Impostazione larghezza barra
     progressBar.style.width = percentage + '%';
 
-    // LOGICA DI ALLERTA: se il totale supera il budget, aggiunge la classe rossa
+    // Gestione reattiva degli allarmi visivi di sforamento
     if (total > limit) {
         progressBar.classList.add('progress-bar-danger');
-    } else {
-        progressBar.classList.remove('progress-bar-danger');
-    }
-    
-    // Aggiornamento testo informativo dinamico
-    // --- LOGICA DI ALLERTA E TESTO DINAMICO ---
-    if (total > limit) {
-        progressBar.classList.add('progress-bar-danger');
-        
-        // Aggiornamento allerta con classi CSS
         progressText.classList.add('alert-text');
         const overBudget = total - limit;
         progressText.textContent = `⚠️ BUDGET SUPERATO DI €${overBudget.toFixed(2)}`;
     } else {
         progressBar.classList.remove('progress-bar-danger');
-        
-        // Ripristino stato neutro
         progressText.classList.remove('alert-text');
-        progressText.style.color = '#94a3b8'; // Colore neutro originale
-        progressText.textContent = `Budget: €${limit} | Utilizzo: ${percentage.toFixed(0)}%`;
+        progressText.style.color = '#94a3b8';
+        progressText.textContent = `Budget: €${limit.toFixed(2)} | Utilizzo: ${percentage.toFixed(0)}%`;
     }
-    // Commento per Debugging
-    console.log(`[DEBUG] UI Updated. Total: ${total} | Budget Limit: ${limit} | Status: ${total > limit ? 'CRITICAL' : 'OK'}`);
+
+    console.log(`[DEBUG] Interfaccia aggiornata. Totale: ${total.toFixed(2)} | Limite: ${limit.toFixed(2)}`);
 }
 
-// Aggiungiamo un listener per aggiornare la barra quando il budget cambia
 budgetInput.addEventListener('input', updateUI);
 
-// 4. Aggiunta dati
+// 4. Inserimento dei record con correzione del calcolo in virgola mobile
 addBtn.addEventListener('click', () => {
-    const name = sanitizeInput(itemNameInput.value);
-    const cost = parseFloat(itemCostInput.value);
+    const name = sanitizeInput(itemNameInput.value.trim());
+    
+    // Mitigazione dell'imprecisione dei float tramite arrotondamento preventivo al centesimo
+    const rawCost = parseFloat(itemCostInput.value);
+    const cost = Math.round(rawCost * 100) / 100;
+
     const freq = parseInt(frequencyInput.value);
 
-    // Validazione base
-    if (name && !isNaN(cost) && cost > 0) {
+    // Validazione dei vincoli prima dell'archiviazione
+    if (name && !isNaN(cost) && cost > 0 && (freq === 12 || freq === 1)) {
         expenses.push({ name, cost, freq });
         localStorage.setItem('myExpenses', JSON.stringify(expenses));
         updateUI();
         
-        // Reset campi
         itemNameInput.value = '';
         itemCostInput.value = '';
     } else {
-        alert("Inserisci dati validi (Nome e Costo > 0)");
+        alert("Dati non validi. Verificare che il nome sia presente e il costo sia superiore a zero.");
     }
 });
 
-// Caricamento iniziale
 updateUI();

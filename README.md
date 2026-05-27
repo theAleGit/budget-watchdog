@@ -1,4 +1,4 @@
-Burn-Rate Radar
+Budget-Whatchdog
 Minimalist web application for tracking recurring expenses and optimizing personal financial planning.
 
 Features
@@ -22,9 +22,9 @@ The application treats all user inputs as untrusted data, utilizing sanitization
 How to run
 Simply open index.html in any modern web browser. No installation or server required.
 
-# Burn-Rate Radar 
+# Budget-Whatchdog 
 
-Burn-Rate Radar è una Web Application "Offline-First" progettata per il monitoraggio della propria esposizione finanziaria. 
+Budget-Whatchdog è una Web Application "Offline-First" progettata per il monitoraggio della propria esposizione finanziaria. 
 L'obiettivo è fornire una visione chiara e immediata del budget annuale, con alert visivi in caso di superamento delle soglie impostate.
 
 ## Tecnologie Utilizzate
@@ -39,4 +39,4 @@ L'obiettivo è fornire una visione chiara e immediata del budget annuale, con al
 * **Privacy-Focused:** Elaborazione dati interamente locale, zero tracking.
 
 ## Deployment
-Il progetto è ospitato su **GitHub Pages**: [https://thealegit.github.io/Burn-Rate-Radar/](https://thealegit.github.io/Burn-Rate-Radar/)
+Il progetto è ospitato su **GitHub Pages**: [https://thealegit.github.io/budget-watchdog/](https://thealegit.github.io/budget-watchdog/)
