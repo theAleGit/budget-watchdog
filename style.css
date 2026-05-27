@@ -115,3 +115,20 @@ li {
     font-size: 1.1rem !important; /* Ancora più grande se in rosso */
     color: #ef4444 !important;
 }
+/* --- FUNZIONE SCONTRINO HARDENED --- */
+.receipt-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex: 1;             /* Sostituisce il 100%: occupa tutto lo spazio lasciando il posto per il tasto X */
+    margin-right: 15px;  /* Distanza di sicurezza dal bottone di eliminazione */
+}
+
+.receipt-details {
+    color: #f8fafc;      /* Colore del testo chiaro per il nome spesa */
+}
+
+.receipt-annual {
+    color: #38bdf8;      /* Azzurro per far risaltare la proiezione annuale */
+    font-weight: 500;
+}
